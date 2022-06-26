@@ -1,0 +1,14 @@
+# Credentials
+.token
+credentials.json
+firebase.json
+
+# Artifacts
+bot-env
+.vscode
+__pycache__
+*.log
+tmp/*.mp4
+tmp/*.wav
+.mypy_cache
+.pytest_cache

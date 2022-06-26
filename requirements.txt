@@ -1,0 +1,13 @@
+requests
+discord.py[voice]
+beautifulsoup4
+pynacl
+discord-py-slash-command
+youtube_dl
+ffmpeg
+numpy
+pyrebase
+isort
+flake8
+mypy
+types-requests
