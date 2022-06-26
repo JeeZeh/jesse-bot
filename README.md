@@ -36,3 +36,14 @@ To keep the bot alive, run with `screen`, `tmux`, or whatever you prefer.
 Requires Discord Members intent.
 
 To create voice channel notifications requires permission to create invites from whatever Discord server it is a part of.
+
+## Formatting and Linting
+
+This repo supports formatting and linting with the following tools:
+
+- isort
+- black
+- mypy
+- flake8
+
+To run the formatter, start from the repo root and run `python lib/format.py`
