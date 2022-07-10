@@ -28,6 +28,7 @@ class VoiceMovement:
 
 @dataclass
 class Helpers:
+    R_NON_ALPHANUM_SPACE = re.compile(r"[^a-zA-Z\d\s]")
     VC_DELAY = 60
     SUB_NOTIF = dedent(
         """
@@ -254,9 +255,23 @@ class Notifications(Cog):
         Triggers are stored as a mapping of `triggers => [users]` so we can perform quick
         lookup of triggers against messages.
         """
+        # Filter any empty triggers accidentally supplied.
+        to_add = [t for t in args if t]
+
+        # If nothing to add, abort.
+        if not to_add:
+            return await ctx.reply("No triggers added")
+
         timestamp = datetime.now().isoformat()
         user_id = str(ctx.author.id)
-        for trigger in args:
+
+        # Check for any forbidden chars in any phrases, abort if found.
+        if any(map(Helpers.R_NON_ALPHANUM_SPACE.search, to_add)):
+            return await ctx.reply(
+                "Could not add one or more triggers. Only latin characters, numbers, and spaces are accepted."
+            )
+
+        for trigger in to_add:
             firebase.database().child("triggers").child(trigger).child(user_id).set(timestamp)
 
         await self.sync_triggers()
