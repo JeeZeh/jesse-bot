@@ -61,7 +61,6 @@ async def _send_video_file(bot: Bot, message: Message, path: str):
 
 async def video_grabber(message: Message) -> Optional[str]:
     for domain in VIDEO_GRABBER_DOMAINS:
-        print(message.content)
         if f"{domain}/" not in message.content:
             continue
 

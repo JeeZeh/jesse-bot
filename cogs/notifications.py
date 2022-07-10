@@ -7,7 +7,7 @@ from textwrap import dedent
 from time import time
 from typing import Optional
 
-from discord import Member, Message
+from discord import Member, Message, User
 from discord.channel import TextChannel, VoiceChannel
 from discord.errors import HTTPException
 from discord.ext.commands import Cog, command, group  # type: ignore
@@ -303,11 +303,48 @@ class Notifications(Cog):
                 registered_triggers.append(trigger)
 
         if not registered_triggers:
-            await ctx.reply("No regisered triggers. Type `!help triggers` to see how to manage triggers")
+            await ctx.reply("No registered triggers. Type `!help triggers` to see how to manage triggers")
         else:
             print(registered_triggers)
             trigger_list = "\n".join(f" - {t}" for t in map(self.censor_phrase, registered_triggers))
             await ctx.reply(f"You have {len(registered_triggers)} registered trigger(s):\n{trigger_list}")
+
+    def should_notify_trigger(self, user_id_str: str, message: Message) -> Optional[User]:
+        logger.info(f"Checking if should notify {user_id_str} about trigger in message: {message}...")
+
+        if message.content.startswith("!triggers"):
+            logger.info("Trigger located in !trigger command message, not notifying.")
+            return None
+
+        if str(message.author.id) == user_id_str:
+            logger.info("Trigger author is user with established trigger, not notifying.")
+            return None
+
+        # if self.bot.is_owner(user):
+        #     print(f"Trigger user is admin ({user}), notifying now!")
+        #     return False
+
+        last_notified = self.trigger_notified.get(user_id_str, 0)
+        if time() - last_notified < Helpers.NOTIFICATION_COOLDOWN:
+            logger.info(
+                f"User last notified {int(time() - last_notified)} second(s) ago (<{Helpers.NOTIFICATION_COOLDOWN}), not notifying."
+            )
+            return None
+
+        # Check User existence and message visibility
+        user: Optional[User] = self.bot.get_user(int(user_id_str))
+        if not user:
+            logger.warn("Cannot identify user, consider removing their subscription. Not notifying.")
+            return None
+
+        # Don't notify a user if they can't see the message (not in the channel)
+        if isinstance(message.channel, TextChannel) and user not in message.channel.members:
+            logger.info("User is not a member of the channel in which the trigger was mentioned, not notifying.")
+            logger.debug(message.channel.members)
+            return None
+
+        logger.info("All checks passed. Notifying user.")
+        return user
 
     async def check_triggers(self, message: Message):
         # Only check for triggers in TextChannels
@@ -319,44 +356,16 @@ class Notifications(Cog):
         for trigger, users in self.local_triggers:
             if (match := trigger.search(message.content)) is not None:
                 start, end = match.span()
-                phrase = message.content[start:end]
+                phrase: str = message.content[start:end]
                 for user_id in users:
-                    last_notified = self.trigger_notified.get(user_id, 0)
-                    user = self.bot.get_user(int(user_id))
-
-                    # Don't notify if we can't find user (maybe deleted, changed ID, etc.)
-                    if user is None:
-                        continue
-
-                    # Don't notify of triggers in trigger commands
-                    if message.content.startswith("!triggers"):
-                        continue
-
-                    # Only apply notification filters to non-admins (for testing)
-                    if not self.bot.is_owner(message.author):
-
-                        # Don't notify user if they've been notified within the last cooldown period
-                        if time() - last_notified < Helpers.NOTIFICATION_COOLDOWN:
-                            continue
-
-                        # Don't notify if the user cannot see the channel in which the trigger was mentioned.
-                        # Only TextChannels have members, Threads do not.
-                        if isinstance(channel, TextChannel):
-                            if user_id not in map(lambda m: str(m.id), channel.members):
-                                continue
-
-                        # Don't notify a user about their own message
-                        if str(message.author.id) == user_id:
-                            continue
-
-                    notification = Helpers.TRIGGER_NOTIF.format(
-                        censored=self.censor_phrase(phrase, True),
-                        channel=channel.name,
-                        server=channel.guild.name,
-                        link=message.jump_url,
-                    )
-                    if user := self.bot.get_user(int(user_id)):
-                        await user.send(notification)
+                    if user_to_notify := self.should_notify_trigger(user_id, message):  
+                        notification = Helpers.TRIGGER_NOTIF.format(
+                            censored=self.censor_phrase(phrase, True),
+                            channel=channel.name,
+                            server=channel.guild.name,
+                            link=message.jump_url,
+                        )
+                        await user_to_notify.send(notification)
                         self.trigger_notified[user_id] = time()
 
     @staticmethod
