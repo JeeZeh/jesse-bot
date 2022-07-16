@@ -1,6 +1,5 @@
 requests
 discord.py[voice]
-beautifulsoup4
 pynacl
 discord-py-slash-command
 youtube_dl
@@ -11,3 +10,7 @@ isort
 flake8
 mypy
 types-requests
+async-timeout==3.0.1
+spotipy
+google-api-python-client
+isodate

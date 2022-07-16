@@ -4,17 +4,15 @@ from os import path
 from pathlib import Path
 from re import IGNORECASE, compile
 from typing import Any, Callable, Coroutine, List, Optional, Tuple
-from urllib import parse
 
-from bs4 import BeautifulSoup
+import isodate
 from discord import File, Message
 from discord.errors import HTTPException
 from discord.ext.commands.bot import Bot
-from requests.api import get
 from youtube_dl import YoutubeDL, utils
 
+from lib.api import firebase, spotify, youtube
 from lib.config import SPOTIFY_REDIRECT_URL, VIDEO_GRABBER_DOMAINS
-from lib.data import firebase
 from lib.logger import logger
 from lib.utils import try_compress_video
 
@@ -23,25 +21,103 @@ text_secrets = {**firebase.database().child("text_secrets").get().val()}
 regex_secrets = {
     compile(rf"^{k}$", flags=IGNORECASE): v for k, v in firebase.database().child("regex_secrets").get().val().items()
 }
+SPOTIFY_URL_IDENTIFIER = "open.spotify.com"
+YOUTUBE_URL_PREFIX = "https://youtu.be"
+
+
+class SpecialType(Enum):
+    VIDEO = 1
+    TEXT = 2
+
+
+SpecialTextFunc = Callable[[Message], Optional[str]]
+SpecialVideoFunc = Callable[[Message], Coroutine[Any, Any, Optional[str]]]
 
 
 def spotify_redirect(message: Message) -> Optional[str]:
-    urls = [line.strip() for line in message.content.splitlines() if line.startswith("https://open.spotify.com/")]
+    urls = [line.strip() for line in message.content.splitlines() if SPOTIFY_URL_IDENTIFIER in line]
 
     to_send = []
 
     for url in urls:
-        page = get(url)
-        soup = BeautifulSoup(page.text, features="html.parser")
-        title = soup.title.contents[0].split(" - ")[0]
+        track = spotify.track(url)
+        redirect_link = f"{SPOTIFY_REDIRECT_URL}?type={track['type']}&item={track['id']}"
 
-        resource_type, resource_id = parse.urlparse(url).path.split("/")[1:]
-        redirect_link = f"{SPOTIFY_REDIRECT_URL}?type={resource_type}&item={resource_id}"
-
-        to_send.append(f"🎶 Open **{title}** in-app: {redirect_link}")
+        to_send.append(f"🎶 Open **{track['name']}** in-app: {redirect_link}")
 
     if to_send:
         return "\n".join(to_send)
+
+    return None
+
+
+def get_spotify_track_info_from_url(url: str) -> Optional[Tuple[str, str, int]]:
+    if SPOTIFY_URL_IDENTIFIER not in url:
+        return None
+
+    track = spotify.track(url)
+    return track["artists"][0]["name"], track["name"], track["duration_ms"] // 1000
+
+
+def try_match_spotify_track_for_youtube_video(url: str):
+    # Not sure if we should do this, video -> track is ambiguous (might not be a song)
+    pass
+
+
+def try_match_youtube_video_for_spotify_track(url: str) -> Optional[str]:
+    track_info = get_spotify_track_info_from_url(url)
+    if not track_info:
+        logger.warn(f"No track info found for Spotify URL: {url}")
+        return None
+
+    artist, title, target_seconds = track_info
+
+    search_results = (
+        youtube.search()
+        .list(
+            q=f"{artist} - {title}",
+            part="snippet",
+            maxResults=3,
+            type="video",
+            topicId="/m/04rlf",
+        )
+        .execute()
+    )
+
+    # Filter by videos without "Album" in title
+    video_ids_to_search = [item["id"]["videoId"] for item in search_results["items"]]
+
+    video_results = (
+        youtube.videos()
+        .list(
+            id=",".join(video_ids_to_search),
+            part="id,contentDetails",
+        )
+        .execute()
+    )
+    video_ids_and_durations: List[Tuple[str, int]] = [
+        (str(item["id"]), isodate.parse_duration(item["contentDetails"]["duration"]).total_seconds())
+        for item in video_results["items"]
+    ]
+
+    # Filter by videos within target duration length +/- 10%
+    possible_videos = [
+        (_id, duration)
+        for _id, duration in video_ids_and_durations
+        if target_seconds * 0.9 <= duration <= target_seconds * 1.1
+    ]
+
+    if possible_videos:
+        return possible_videos[0][0]
+
+    return None
+
+
+def spotify_youtube_converter(message: Message) -> Optional[str]:
+    if SPOTIFY_URL_IDENTIFIER in message.content:
+        video_id = try_match_youtube_video_for_spotify_track(message.content)
+        if video_id:
+            return f"I think I found a YouTube link for this: {YOUTUBE_URL_PREFIX}/{video_id}"
 
     return None
 
@@ -108,17 +184,8 @@ def check_text_secrets(content: str) -> Optional[str]:
     return None
 
 
-class SpecialType(Enum):
-    VIDEO = 1
-    TEXT = 2
-
-
-SpecialTextFunc = Callable[[Message], Optional[str]]
-SpecialVideoFunc = Callable[[Message], Coroutine[Any, Any, Optional[str]]]
-
-
 async def check_specials(content: Message) -> Optional[Tuple[str, SpecialType]]:
-    text_specials: List[SpecialTextFunc] = [ligma]
+    text_specials: List[SpecialTextFunc] = [ligma, spotify_youtube_converter]
     video_specials: List[SpecialVideoFunc] = [video_grabber]
 
     for text_special in text_specials:
@@ -145,7 +212,7 @@ async def check_passive(bot: Bot, message: Message):
         if special_type is SpecialType.VIDEO:
             return await _send_video_file(bot, message, ret_val)
         else:
-            return await message.channel.send(ret_val)
+            return await (await message.reply(ret_val)).edit(suppress=True)
 
     if text_secret := check_text_secrets(message.content):
         return await message.channel.send(text_secret)
