@@ -12,3 +12,6 @@ tmp/*.mp4
 tmp/*.wav
 .mypy_cache
 .pytest_cache
+youtube.json
+spotify.json
+.cache

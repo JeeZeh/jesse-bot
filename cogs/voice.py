@@ -14,7 +14,7 @@ from discord.member import VoiceState
 from discord.message import Message
 from discord.voice_client import VoiceClient
 
-from lib.data import firebase
+from lib.api import firebase
 
 
 def current_milli_time():

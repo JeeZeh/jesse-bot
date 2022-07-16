@@ -1,5 +1,5 @@
 import discord
-from discord.ext.commands import Bot as _Bot
+from discord.ext.commands import Bot as _Bot  # type: ignore
 from discord_slash import SlashCommand
 
 from cogs.passive import check_passive

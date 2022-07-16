@@ -4,10 +4,9 @@ from functools import wraps
 from random import randint, random
 from typing import Any, Optional
 
-from discord.ext import commands
-from discord.ext.commands import Bot, Command, Context
+from discord.ext.commands import Bot, Cog, Command, Context, command  # type: ignore
 
-from lib.data import firebase
+from lib.api import firebase
 from lib.utils import Constants, char_to_block, partition_message
 
 
@@ -16,7 +15,7 @@ async def batch_send(ctx: Context, to_send: str):
         await ctx.send(part)
 
 
-class Text(commands.Cog, description="Commands which mostly manipulate/send text"):  # type: ignore
+class Text(Cog, description="Commands which mostly manipulate/send text"):  # type: ignore
     def __init__(self, bot: Bot):
         self.bot = bot
         self.pastas = list(firebase.database().child("pastas").get().val())
@@ -91,7 +90,7 @@ class Text(commands.Cog, description="Commands which mostly manipulate/send text
 
         return wrapper
 
-    @commands.command(
+    @command(
         description="Inserts a clap emoji after each word of input e.g. boi 👏 you 👏 gonna 👏 catch 👏 these 👏 hands 👏",
         aliases=["c"],
     )
@@ -99,7 +98,7 @@ class Text(commands.Cog, description="Commands which mostly manipulate/send text
     async def clap(self, ctx: Context, *, message: str):
         return re.sub(r"\s+", " 👏 ", message)
 
-    @commands.command(
+    @command(
         description="The SpongeBob text i.e. alternate input text in upper and lower case",
         aliases=["m", "spongebob"],
     )
@@ -116,12 +115,12 @@ class Text(commands.Cog, description="Commands which mostly manipulate/send text
 
         return "".join(out_chars)
 
-    @commands.command(description="Capitalises first letter of input e.g. What Are You Talking About")
+    @command(description="Capitalises first letter of input e.g. What Are You Talking About")
     @chainable
     async def title(self, ctx: Context, *, message: str):
         return message.title()
 
-    @commands.command(
+    @command(
         description="Owo-ifies provided text: !owo 'try again' -> 'twy again'",
         aliases=["o"],
     )
@@ -132,7 +131,7 @@ class Text(commands.Cog, description="Commands which mostly manipulate/send text
 
         return message
 
-    @commands.command(
+    @command(
         description="Makes your message 🇧🇮🇬",
         aliases=["b", "emojify"],
     )
@@ -150,14 +149,14 @@ class Text(commands.Cog, description="Commands which mostly manipulate/send text
 
         return "  ".join(out_chars)
 
-    @commands.command(description="Gives a random copy-pasta from local database")
+    @command(description="Gives a random copy-pasta from local database")
     @chainable
     async def pasta(self, ctx):
         pasta = self.pastas[randint(0, len(self.pastas) - 1)]
 
         return pasta
 
-    @commands.command(description="Roll some dice")
+    @command(description="Roll some dice")
     async def roll(self, ctx, *, message: str):
         if not message.count("d") in {0, 1}:
             ctx.send("Bad")

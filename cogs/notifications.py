@@ -15,7 +15,7 @@ from discord.ext.commands.bot import Bot
 from discord.ext.commands.context import Context
 from discord.invite import Invite
 
-from lib.data import firebase
+from lib.api import firebase
 from lib.logger import logger
 
 
@@ -121,7 +121,7 @@ class Notifications(Cog):
 
         members_in_channel = set(map(lambda x: str(x.id), self.bot.get_channel(channel.id).members))
         for subscriber in self.subscribers.get(str(channel.id), []):
-            if str(joiner.id) == subscriber:
+            if hasattr(joiner, "id") and str(getattr(joiner, "id")) == subscriber:
                 continue
 
             if subscriber in members_in_channel:
@@ -325,9 +325,10 @@ class Notifications(Cog):
         #     return False
 
         last_notified = self.trigger_notified.get(user_id_str, 0)
-        if time() - last_notified < Helpers.NOTIFICATION_COOLDOWN:
+        time_since = int(time() - last_notified)
+        if time_since < Helpers.NOTIFICATION_COOLDOWN:
             logger.info(
-                f"User last notified {int(time() - last_notified)} second(s) ago (<{Helpers.NOTIFICATION_COOLDOWN}), not notifying."
+                f"User last notified {time_since} second(s) ago (<{Helpers.NOTIFICATION_COOLDOWN}), not notifying."
             )
             return None
 
@@ -358,7 +359,7 @@ class Notifications(Cog):
                 start, end = match.span()
                 phrase: str = message.content[start:end]
                 for user_id in users:
-                    if user_to_notify := self.should_notify_trigger(user_id, message):  
+                    if user_to_notify := self.should_notify_trigger(user_id, message):
                         notification = Helpers.TRIGGER_NOTIF.format(
                             censored=self.censor_phrase(phrase, True),
                             channel=channel.name,
