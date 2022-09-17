@@ -1,12 +1,13 @@
 import discord
+import asyncio
 from discord.ext.commands import Bot as _Bot  # type: ignore
-from discord_slash import SlashCommand
 
 from cogs.passive import check_passive
 from lib.config import COG_EXTENSIONS, config
 from lib.utils import cleanup
 
 intents = discord.Intents.default()
+intents.message_content = True
 intents.typing = False
 intents.members = True
 
@@ -34,13 +35,18 @@ bot = Bot(
     intents=intents,
 )
 
-slash = SlashCommand(bot, sync_commands=True, override_type=True)
 
-if __name__ == "__main__":
+def load_bot(bot: Bot):
     cleanup()
     for extension in COG_EXTENSIONS:
-        bot.load_extension(f"cogs.{extension}")
+        asyncio.run(bot.load_extension(f"cogs.{extension}"))
+
     bot.run(token)
+    return bot
+
+
+if __name__ == "__main__":
+    load_bot(bot)
 
 # ==== VOICE ====
 # TODO: "broadcast": "If the bot is in a voice channel it will automatically play any sent audio files",

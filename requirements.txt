@@ -1,11 +1,10 @@
 requests
 discord.py[voice]
 pynacl
-discord-py-slash-command
 youtube_dl
 ffmpeg
 numpy
-pyrebase
+pyrebase4
 isort
 flake8
 mypy
@@ -14,3 +13,4 @@ async-timeout==3.0.1
 spotipy
 google-api-python-client
 isodate
+pytest-asyncio

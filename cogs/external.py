@@ -17,5 +17,5 @@ class External(commands.Cog, description="Commands that talk to the outside worl
         await ctx.send(f"https://prnt.sc/{prefix}{suffix}")
 
 
-def setup(bot):
-    bot.add_cog(External(bot))
+async def setup(bot):
+    await bot.add_cog(External(bot))

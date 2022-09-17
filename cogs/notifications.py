@@ -101,6 +101,12 @@ class Notifications(Cog):
             user_ids = list(users.keys())
             self.local_triggers.append((pattern, user_ids))
 
+    def user_can_connect_to_channel(user: Optional[Member], channel: VoiceChannel) -> bool:
+        if user is None:
+            return False
+
+        return channel.permissions_for(user).connect
+
     def get_within_guild_movement(self, before, after) -> VoiceMovement:
         movement = VoiceMovement(before.channel, after.channel)
         if movement.joined is not None and len(movement.joined.members) == 1:
@@ -121,17 +127,27 @@ class Notifications(Cog):
 
         members_in_channel = set(map(lambda x: str(x.id), self.bot.get_channel(channel.id).members))
         for subscriber in self.subscribers.get(str(channel.id), []):
+            # Don't notify the person who joined the channel
             if hasattr(joiner, "id") and str(getattr(joiner, "id")) == subscriber:
                 continue
 
+            # Don't notify anyone already in the channel
             if subscriber in members_in_channel:
                 continue
 
-            logger.debug("Notifying user", self.bot.get_user(subscriber))
+            user = self.bot.get_user(int(subscriber))  # Only treat user IDs as ints for API calls
+            if user is None:
+                continue
+
+            # Don't notify someone who cannot see the channel
+            if not channel.permissions_for(user).connect:
+                continue
+
             # Only notify if we haven't notified the subscriber in over an hour
             if time() - self.subscriber_notified[subscriber] < Helpers.NOTIFICATION_COOLDOWN:
                 continue
 
+            logger.debug("Notifying user", user)
             invite: Optional[Invite] = None
             try:
                 invite = await channel.create_invite(
@@ -142,8 +158,6 @@ class Notifications(Cog):
             except HTTPException:
                 logger.exception(f"Maybe no permission to create an invite for {channel.name}?", exc_info=True)
                 return
-
-            user = self.bot.get_user(int(subscriber))  # Only treat user IDs as ints for API calls
 
             if subscriber is not None and invite is not None:
                 await user.send(
@@ -381,5 +395,5 @@ class Notifications(Cog):
         return " ".join(parts)
 
 
-def setup(bot):
-    bot.add_cog(Notifications(bot))
+async def setup(bot):
+    await bot.add_cog(Notifications(bot))

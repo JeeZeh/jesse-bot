@@ -30,5 +30,5 @@ class Testing(Cog):
         await ctx.reply(f"Reloaded {len(COG_EXTENSIONS)} extension(s)")
 
 
-def setup(bot: Bot):
-    bot.add_cog(Testing(bot))
+async def setup(bot: Bot):
+    await bot.add_cog(Testing(bot))

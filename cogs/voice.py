@@ -382,5 +382,5 @@ class Voice(Cog, description="Commands related to voice"):  # type: ignore
         await self.leave_if_alone(before, after)
 
 
-def setup(bot):
-    bot.add_cog(Voice(bot))
+async def setup(bot):
+    await bot.add_cog(Voice(bot))

@@ -182,5 +182,5 @@ class Text(Cog, description="Commands which mostly manipulate/send text"):  # ty
         ctx.send(f"{wanted}\n{outcome}")
 
 
-def setup(bot):
-    bot.add_cog(Text(bot))
+async def setup(bot):
+   await bot.add_cog(Text(bot))
