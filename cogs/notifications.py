@@ -101,12 +101,6 @@ class Notifications(Cog):
             user_ids = list(users.keys())
             self.local_triggers.append((pattern, user_ids))
 
-    def user_can_connect_to_channel(user: Optional[Member], channel: VoiceChannel) -> bool:
-        if user is None:
-            return False
-
-        return channel.permissions_for(user).connect
-
     def get_within_guild_movement(self, before, after) -> VoiceMovement:
         movement = VoiceMovement(before.channel, after.channel)
         if movement.joined is not None and len(movement.joined.members) == 1:
