@@ -183,4 +183,4 @@ class Text(Cog, description="Commands which mostly manipulate/send text"):  # ty
 
 
 async def setup(bot):
-   await bot.add_cog(Text(bot))
+    await bot.add_cog(Text(bot))

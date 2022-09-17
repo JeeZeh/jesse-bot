@@ -1,5 +1,6 @@
-import discord
 import asyncio
+
+import discord
 from discord.ext.commands import Bot as _Bot  # type: ignore
 
 from cogs.passive import check_passive

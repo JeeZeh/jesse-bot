@@ -127,8 +127,8 @@ async def _send_video_file(bot: Bot, message: Message, path: str):
         await message.reply(file=File(path), content="📽️ Grabbed the video!")
         return await message.remove_reaction(member=bot.user, emoji="🔃")
     except HTTPException as he:
-        await message.remove_reaction(member=bot.user, emoji="🔃")
-        await message.add_reaction(emoji="❌")
+        await message.remove_reaction("🔃", bot.user)
+        await message.add_reaction("❌")
         if he.status == 413:
             await message.reply("Video was too large to send :(")
         else:
@@ -145,7 +145,7 @@ async def video_grabber(message: Message) -> Optional[str]:
         with YoutubeDL({"outtmpl": f"tmp/{id}.%(ext)s", "f": "best[filesize<8M]"}) as ytdl:
             try:
                 ytdl.download([message.content])
-                await message.add_reaction(emoji="🔃")
+                await message.add_reaction("🔃")
                 filepath = glob(f"../tmp/{id}.*")[0]
 
                 # Compress videos greater than 7.5MB so they can be set by Discord regular user
