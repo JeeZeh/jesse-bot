@@ -120,6 +120,7 @@ class Notifications(Cog):
             return
 
         members_in_channel = set(map(lambda x: str(x.id), self.bot.get_channel(channel.id).members))
+
         for subscriber in self.subscribers.get(str(channel.id), []):
             # Don't notify the person who joined the channel
             if hasattr(joiner, "id") and str(getattr(joiner, "id")) == subscriber:
@@ -129,19 +130,15 @@ class Notifications(Cog):
             if subscriber in members_in_channel:
                 continue
 
-            user = self.bot.get_user(int(subscriber))  # Only treat user IDs as ints for API calls
-            if user is None:
-                continue
-
-            # Don't notify someone who cannot see the channel
-            if not channel.permissions_for(user).connect:
+            member = channel.guild.get_member(int(subscriber))  # Only treat user IDs as ints for API calls
+            if member is None:
                 continue
 
             # Only notify if we haven't notified the subscriber in over an hour
             if time() - self.subscriber_notified[subscriber] < Helpers.NOTIFICATION_COOLDOWN:
                 continue
 
-            logger.debug("Notifying user", user)
+            logger.debug("Notifying user", member)
             invite: Optional[Invite] = None
             try:
                 invite = await channel.create_invite(
@@ -154,7 +151,7 @@ class Notifications(Cog):
                 return
 
             if subscriber is not None and invite is not None:
-                await user.send(
+                await member.send(
                     Helpers.SUB_NOTIF.format(
                         user=joiner.display_name,
                         invite=invite.url,
@@ -317,7 +314,7 @@ class Notifications(Cog):
             trigger_list = "\n".join(f" - {t}" for t in map(self.censor_phrase, registered_triggers))
             await ctx.reply(f"You have {len(registered_triggers)} registered trigger(s):\n{trigger_list}")
 
-    def should_notify_trigger(self, user_id_str: str, message: Message) -> Optional[User]:
+    def should_notify_trigger(self, user_id_str: str, message: Message) -> Optional[Member]:
         logger.info(f"Checking if should notify {user_id_str} about trigger in message: {message}...")
 
         if message.content.startswith("!triggers"):
@@ -340,20 +337,16 @@ class Notifications(Cog):
             )
             return None
 
-        # Check User existence and message visibility
-        user: Optional[User] = self.bot.get_user(int(user_id_str))
-        if not user:
-            logger.warn("Cannot identify user, consider removing their subscription. Not notifying.")
-            return None
-
-        # Don't notify a user if they can't see the message (not in the channel)
-        if isinstance(message.channel, TextChannel) and user not in message.channel.members:
-            logger.info("User is not a member of the channel in which the trigger was mentioned, not notifying.")
-            logger.debug(message.channel.members)
+        # Check Member existence in server and message visibility
+        member = message.guild.get_member(int(user_id_str))
+        if not member or member not in message.channel.members:
+            logger.info(
+                "User to notify is not a member of the channel in which the trigger was mentioned, not notifying."
+            )
             return None
 
         logger.info("All checks passed. Notifying user.")
-        return user
+        return member
 
     async def check_triggers(self, message: Message):
         # Only check for triggers in TextChannels
