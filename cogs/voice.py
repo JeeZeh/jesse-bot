@@ -1,5 +1,6 @@
 import asyncio
 import audioop as ao
+from pathlib import Path
 import time
 from dataclasses import dataclass
 from typing import Dict, Optional, Set
@@ -154,7 +155,7 @@ class Voice(Cog, description="Commands related to voice"):  # type: ignore
         return None
 
     def _update_secrets(self) -> Set[str]:
-        before = set(self.voice_secrets)
+        before: set[str] = set(self.voice_secrets)
         self.voice_secrets = firebase.database().child("secrets").get().val()
         self.cached_voice_secrets = {}
 
@@ -205,9 +206,10 @@ class Voice(Cog, description="Commands related to voice"):  # type: ignore
         Returns:
             str: Location of locally downloaded file.
         """
-        location = "tmp/" + path.split("/")[-1]
+        filename = path.split("/")[-1]
+        location = Path("tmp") / filename
         print(f"Downloading missing file '{location}'...")
-        firebase.storage().child(path).download(location)
+        firebase.storage().child(path).download(str(location), filename)
 
         return location
 
