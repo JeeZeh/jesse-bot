@@ -1,6 +1,7 @@
 import asyncio
 import audioop as ao
 from pathlib import Path
+import subprocess
 import time
 from dataclasses import dataclass
 from typing import Dict, Optional, Set
@@ -72,7 +73,7 @@ class AudioBufferWrapper(AudioSource):
 
     @staticmethod
     def from_file(path):
-        data = FFmpegPCMAudio(path, before_options="-guess_layout_max 0")
+        data = FFmpegPCMAudio(path, before_options="-guess_layout_max 0", stderr=subprocess.PIPE)
 
         # Copy buffer data from real audio source to an ndarray
         buffer_data: bytearray = []
