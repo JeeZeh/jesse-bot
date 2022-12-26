@@ -15,3 +15,4 @@ tmp/*.wav
 youtube.json
 spotify.json
 .cache
+service_credentials.json
