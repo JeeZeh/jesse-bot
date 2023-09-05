@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 import os
+from common.constants import AWS_ACCOUNT
 
 import aws_cdk as cdk
 
-from aws.aws_stack import AwsStack
+from aws.bot_stack import JesseBotStack
 
 app = cdk.App()
-AwsStack(
+JesseBotStack(
     app,
     "JesseBot",
     env=cdk.Environment(account=AWS_ACCOUNT, region="eu-west-1"),

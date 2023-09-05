@@ -16,3 +16,4 @@ youtube.json
 spotify.json
 .cache
 service_credentials.json
+.env
