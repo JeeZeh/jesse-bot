@@ -1,8 +1,18 @@
-from lib.api import firebase
+from lib.api import dynamodb
 
-MAX_MESSAGE_LENGTH = 2000
-COG_EXTENSIONS = ["text", "voice", "notifications", "external", "testing"]
-SPOTIFY_REDIRECT_URL = firebase.database().child("config").child("spotify_redirect_url").get().val()
-VIDEO_GRABBER_DOMAINS = ["tiktok.com"]
 
-config = firebase.database().child("config").get().val()
+def get_config():
+    config_data = dynamodb.get_item(Key={"id": "config"})
+    print(config_data)
+
+    return config_data["Item"]
+
+
+config = get_config()
+
+
+TOKEN = config["discord_token"]
+SPOTIFY_REDIRECT_URL = config["spotify_redirect_url"]
+MAX_MESSAGE_LENGTH = config["max_message_length"]
+SLASH_GUILDS = config["slash_guilds"]
+VIDEO_GRABBER_DOMAINS = config["video_grabber_domains"]

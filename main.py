@@ -4,7 +4,7 @@ import discord
 from discord.ext.commands import Bot as _Bot  # type: ignore
 
 from cogs.passive import check_passive
-from lib.config import COG_EXTENSIONS, config
+from lib.config import COG_EXTENSIONS, TOKEN
 from lib.utils import cleanup
 
 intents = discord.Intents.default()
@@ -22,10 +22,7 @@ class Bot(_Bot):
         await check_passive(self, message)
         return await super().on_message(message)
 
-
-token = config.get("token")
-
-if not token:
+if not TOKEN:
     print("No token found!")
     exit()
 
@@ -41,7 +38,7 @@ def load_bot(bot: Bot):
     for extension in COG_EXTENSIONS:
         asyncio.run(bot.load_extension(f"cogs.{extension}"))
 
-    bot.run(token)
+    bot.run(TOKEN)
     return bot
 
 

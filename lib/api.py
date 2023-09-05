@@ -1,15 +1,23 @@
 import json
+from os import getenv
+from dotenv import load_dotenv
 from typing import Any
 
 import pyrebase
+import boto3
 from googleapiclient.discovery import build
 from spotipy import Spotify, SpotifyClientCredentials
 from .logger import logger
 
+load_dotenv()
 
 firebase: Any = None
 spotify: Any = None
 youtube: Any = None
+
+# AWS Clients
+boto: boto3 = None
+dynamodb: Any = None
 
 
 def init():
@@ -18,6 +26,7 @@ def init():
         init_spotify(creds["spotify"])
         init_firebase(creds["firebase"])
         init_youtube(creds["youtube"])
+        init_boto3_clients()
 
 
 def init_youtube(creds):
@@ -44,6 +53,19 @@ def init_spotify(creds):
             client_secret=creds["client_secret"],
         )
     )
+
+
+def init_boto3_clients():
+    global boto, dynamodb
+
+    if not boto:
+        boto = boto3.Session(
+            aws_access_key_id=getenv("AWS_ACCESS_KEY_ID"),
+            aws_secret_access_key=getenv("AWS_SECRET_ACCESS_KEY"),
+            region_name=getenv("AWS_REGION"),
+        )
+
+    dynamodb = boto.resource("dynamodb").Table("jesse-bot-db")
 
 
 init()
