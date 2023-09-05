@@ -29,16 +29,11 @@ class JesseBotStack(Stack):
             read_capacity=5,
             write_capacity=5,
             table_name="jesse-bot-db",
-            partition_key=ddb.Attribute(name="entry_type", type=ddb.AttributeType.STRING),
+            partition_key=ddb.Attribute(name="id", type=ddb.AttributeType.STRING),
             deletion_protection=True,
         )
 
-        jesse_bot_role = iam.Role(
-            self, "AccessRole", role_name="jesse-bot-role", assumed_by=iam.AccountPrincipal(AWS_ACCOUNT)
-        )
-        jesse_bot_user = iam.User(self, "User", user_name="jesse-bot-user")
+        jesse_bot_user = iam.User(self, "JesseBotUser", user_name="jesse-bot-user")
 
-        jesse_bot_role.grant_assume_role(jesse_bot_user)
-
-        storage_bucket.grant_read_write(jesse_bot_role)
-        db.grant_read_write_data(jesse_bot_role)
+        storage_bucket.grant_read_write(jesse_bot_user)
+        db.grant_read_write_data(jesse_bot_user)
