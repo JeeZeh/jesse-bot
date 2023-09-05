@@ -210,9 +210,7 @@ class Voice(Cog, description="Commands related to voice"):  # type: ignore
         filename = path.split("/")[-1]
         location = Path("tmp") / filename
         print(f"Downloading missing file '{location}'...")
-        child = firebase.storage().child(path)
-        print(path, filename, child, location.resolve())
-        child.download(str(location.resolve()), filename)
+        firebase.storage().download(path, str(location))
 
         return location
 
