@@ -8,7 +8,6 @@ This bot was written as a way to make my personal discord server more interactiv
 
 - Notification support - currently rudimentary (lots of logic duplicated) but it does the job
   - Supports notifying users when a voice channel they subscribe to is joined
-  - Supports notifying users when a trigger phrase is mentioned in a chat visible to them (can be used as a topic notification or content warning system)
 - Support for loading and playing back audio files from Firebase storage
   - Some support for audio effects like layering and reversing audio buffer to stack sounds and create audio mayhem
 - Chain text through multiple modifier commands

@@ -210,7 +210,9 @@ class Voice(Cog, description="Commands related to voice"):  # type: ignore
         filename = path.split("/")[-1]
         location = Path("tmp") / filename
         print(f"Downloading missing file '{location}'...")
-        firebase.storage().child(path).download(str(location), filename)
+        child = firebase.storage().child(path)
+        print(path, filename, child, location.resolve())
+        child.download(str(location.resolve()), filename)
 
         return location
 
@@ -251,7 +253,7 @@ class Voice(Cog, description="Commands related to voice"):  # type: ignore
             stack (bool, optional): Play the requested file on top of an already-playing sound. Defaults to False.
             auto_join (bool, optional): Should the bot join in response to the request. Defaults to True.
         """
-
+        print(message, requested, self.voice_client)
         audio_wrapper = self._get_audio_wrapper_from_sound_name(requested)
         if audio_wrapper is None:
             return

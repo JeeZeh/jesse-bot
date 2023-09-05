@@ -39,41 +39,12 @@ class Helpers:
             To unsubscribe from these notifications, type `!unsubscribe {channel_id}`
         """
     )
-    TRIGGER_HELP = dedent(
-        """
-            JesseBot can help you feel safer in servers by letting you know if any
-            text-based triggers are mentioned in channels you both share. The bot
-            will watch for mentions of your trigger(s) in messages and notify you
-            if any are spotted (the actual trigger is censored in the notification).
-
-            NOTE: This does not detect triggers in links, images, embeds, videos, voice, etc.
-            Only mentions of a trigger, in the text of a message, can be detected.
-
-            You can add single-word triggers (separated by a space) or whole-phrase triggers
-            (wrapped in "double quotes" to treat as a single trigger).
-              - To view your saved triggers, use the "!triggers list" command
-              - To add a trigger, use the "!triggers add"
-              - To remove a trigger, use the "!triggers remove" command
-        """
-    )
-    TRIGGER_NOTIF = dedent(
-        """
-            Hey!
-
-            A trigger ({censored}) you've registered with me was just mentioned in `#{channel}` (server: `{server}`).
-            Here's the link to the message if you'd like to engage with it now or later: {link}.
-
-            _I'll wait an hour before notifying you again of any other triggers._
-        """
-    )
     NOTIFICATION_COOLDOWN = 3600
 
 
 class Notifications(Cog):
-    local_triggers: list[tuple[re.Pattern, list[str]]] = []
     subscribers: dict[str, list[str]] = defaultdict(list)
     subscriber_notified: dict[str, float] = defaultdict(float)
-    trigger_notified: dict[str, float] = defaultdict(float)
 
     def __init__(self, bot: Bot):
         self.bot = bot
@@ -84,22 +55,6 @@ class Notifications(Cog):
 
     async def update_subscribers(self):
         firebase.database().child("subscribers").update(self.subscribers)
-
-    async def sync_triggers(self):
-        """
-        Local trigger format:
-          List[Tuple[RegExp, List[str]]]
-
-        Remote trigger format:
-          Dict[str, Dict[str, str]]
-        """
-        remote_triggers: dict[str, dict[str, str]] = firebase.database().child("triggers").get().val()
-        self.local_triggers = []
-
-        for trigger_phrase, users in remote_triggers.items():
-            pattern = re.compile(rf"\b{trigger_phrase}\b")
-            user_ids = list(users.keys())
-            self.local_triggers.append((pattern, user_ids))
 
     def get_within_guild_movement(self, before, after) -> VoiceMovement:
         movement = VoiceMovement(before.channel, after.channel)
@@ -242,133 +197,6 @@ class Notifications(Cog):
         # If they joined a new channel and didn't come from another in the guild
         if channel := self.member_joined_a_channel(member, before, after):
             await self.maybe_notify_subscribers(member, channel)
-
-    @group(name="triggers", pass_context=True, help=Helpers.TRIGGER_HELP, aliases=["trigger"])
-    async def triggers(self, ctx: Context):
-        print(ctx.invoked_subcommand)
-        if ctx.invoked_subcommand is self.triggers:
-            await ctx.reply(
-                f"Unknown subcommand, available commands for `!trigger` are `{', '.join(self.triggers.commands)}`"
-            )
-
-    @triggers.command(
-        description="Add one or more triggers to be tracked across servers you share with JesseBot",
-        help="Add one or more triggers to be tracked across servers you share with JesseBot",
-    )
-    async def add(self, ctx: Context, *args):
-        """
-        Triggers are stored as a mapping of `triggers => [users]` so we can perform quick
-        lookup of triggers against messages.
-        """
-        # Filter any empty triggers accidentally supplied.
-        to_add = [t for t in args if t]
-
-        # If nothing to add, abort.
-        if not to_add:
-            return await ctx.reply("No triggers added")
-
-        timestamp = datetime.now().isoformat()
-        user_id = str(ctx.author.id)
-
-        # Check for any forbidden chars in any phrases, abort if found.
-        if any(map(Helpers.R_NON_ALPHANUM_SPACE.search, to_add)):
-            return await ctx.reply(
-                "Could not add one or more triggers. Only latin characters, numbers, and spaces are accepted."
-            )
-
-        for trigger in to_add:
-            firebase.database().child("triggers").child(trigger).child(user_id).set(timestamp)
-
-        await self.sync_triggers()
-        await ctx.reply(f"Successfully added {len(args)} trigger(s)")
-
-    @triggers.command(
-        description="Remove one or more triggers registered with JesseBot",
-        help="Remove one or more triggers registered with JesseBot",
-    )
-    async def remove(self, ctx: Context, *args):
-        user_id = str(ctx.author.id)
-        for trigger in args:
-            firebase.database().child("triggers").child(trigger).child(user_id).remove()
-
-        await self.sync_triggers()
-        await ctx.reply(f"Successfully removed {len(args)} trigger(s)")
-
-    @triggers.command(
-        description="List triggers registered with JesseBot",
-        help="List triggers registered with JesseBot",
-    )
-    async def list(self, ctx: Context):
-        user_id = str(ctx.author.id)
-
-        registered_triggers = []
-        triggers = firebase.database().child("triggers").get().val() or {}
-        for trigger, users in triggers.items():
-            if user_id in users:
-                registered_triggers.append(trigger)
-
-        if not registered_triggers:
-            await ctx.reply("No registered triggers. Type `!help triggers` to see how to manage triggers")
-        else:
-            print(registered_triggers)
-            trigger_list = "\n".join(f" - {t}" for t in map(self.censor_phrase, registered_triggers))
-            await ctx.reply(f"You have {len(registered_triggers)} registered trigger(s):\n{trigger_list}")
-
-    def should_notify_trigger(self, user_id_str: str, message: Message) -> Optional[Member]:
-        logger.info(f"Checking if should notify {user_id_str} about trigger in message: {message}...")
-
-        if message.content.startswith("!triggers"):
-            logger.info("Trigger located in !trigger command message, not notifying.")
-            return None
-
-        if str(message.author.id) == user_id_str:
-            logger.info("Trigger author is user with established trigger, not notifying.")
-            return None
-
-        # if self.bot.is_owner(user):
-        #     print(f"Trigger user is admin ({user}), notifying now!")
-        #     return False
-
-        last_notified = self.trigger_notified.get(user_id_str, 0)
-        time_since = int(time() - last_notified)
-        if time_since < Helpers.NOTIFICATION_COOLDOWN:
-            logger.info(
-                f"User last notified {time_since} second(s) ago (<{Helpers.NOTIFICATION_COOLDOWN}), not notifying."
-            )
-            return None
-
-        # Check Member existence in server and message visibility
-        member = message.guild.get_member(int(user_id_str))
-        if not member or member not in message.channel.members:
-            logger.info(
-                "User to notify is not a member of the channel in which the trigger was mentioned, not notifying."
-            )
-            return None
-
-        logger.info("All checks passed. Notifying user.")
-        return member
-
-    async def check_triggers(self, message: Message):
-        # Only check for triggers in TextChannels
-        if not isinstance(message.channel, TextChannel):
-            return
-
-        channel: TextChannel = message.channel
-
-        for trigger, users in self.local_triggers:
-            if (match := trigger.search(message.content)) is not None:
-                start, end = match.span()
-                phrase: str = message.content[start:end]
-                for user_id in users:
-                    if user_to_notify := self.should_notify_trigger(user_id, message):
-                        notification = Helpers.TRIGGER_NOTIF.format(
-                            censored=self.censor_phrase(phrase, True),
-                            channel=channel.name,
-                            server=channel.guild.name,
-                            link=message.jump_url,
-                        )
-                        await user_to_notify.send(notification)
-                        self.trigger_notified[user_id] = time()
 
     @staticmethod
     def censor_phrase(phrase: str, full_censor=False):

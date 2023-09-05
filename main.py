@@ -17,7 +17,6 @@ class Bot(_Bot):
     async def on_ready(self):
         print(f"Logged on as {self.user}!")
         await self.get_cog("Notifications").load_subscribers()
-        await self.get_cog("Notifications").sync_triggers()
 
     async def on_message(self, message):
         await check_passive(self, message)

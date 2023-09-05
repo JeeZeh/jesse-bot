@@ -205,8 +205,6 @@ async def check_passive(bot: Bot, message: Message):
     if bot.user.id == message.author.id:
         return
 
-    await bot.get_cog("Notifications").check_triggers(message)
-
     if special := await check_specials(message):
         ret_val, special_type = special
         if special_type is SpecialType.VIDEO:
