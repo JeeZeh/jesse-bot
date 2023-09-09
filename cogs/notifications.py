@@ -49,14 +49,14 @@ class Notifications(Cog):
     def __init__(self, bot: Bot):
         self.bot = bot
 
-    async def load_subscribers(self):
+    def load_subscribers(self):
         self.subscribers = defaultdict(list)
         self.subscribers.update(**dynamodb.get_item(Key={"id": "subscribers"}).get("Item", {}).get("data", {}))
         if not self.subscribers:
             print("WARNING: NO SUBSCRIBERS FOUND")
 
-    # async def update_subscribers(self):
-    #     firebase.database().child("subscribers").update(self.subscribers)
+    def update_subscribers(self):
+        dynamodb.put_item(Item={"id": "subscribers", "data": self.subscribers})
 
     def get_within_guild_movement(self, before, after) -> VoiceMovement:
         movement = VoiceMovement(before.channel, after.channel)
@@ -119,17 +119,19 @@ class Notifications(Cog):
             self.subscriber_notified[subscriber] = time()
 
     def get_channels_from_str(self, ids: str) -> list[VoiceChannel]:
-        channel_ids = map(int, filter(str.isnumeric, map(str.strip, ids.split())))
+        channel_ids = map(int, filter(str.isnumeric, map(lambda id_: id_.split("/")[-1].strip(), ids.split())))
         ids_as_channels = map(self.bot.get_channel, channel_ids)
         return [channel for channel in ids_as_channels if channel is not None and isinstance(channel, VoiceChannel)]
 
     def format_voice_channel_list(self, channels: list[VoiceChannel]):
-        return "\n".join([f"  - `{channel.id}` - {channel.name} ({channel.guild.name})" for channel in channels])
+        return "\n".join(
+            [f"- https://discord.com/channels/{channel.guild.id}/{channel.id} ({channel.id})" for channel in channels]
+        )
 
     @command(description="Get notified when someone joins a voice channel: `!subscribe CHANNEL_ID_HERE`")
-    async def subscribe(self, ctx: Context, *, message):
+    async def subscribe(self, ctx: Context, *, channel_ids):
         to_subscribe = str(ctx.author.id)
-        channels = self.get_channels_from_str(message)
+        channels = self.get_channels_from_str(channel_ids)
         new_subscriptions: list[VoiceChannel] = []
 
         for channel in channels:
@@ -138,16 +140,18 @@ class Notifications(Cog):
                 self.subscribers[str(channel.id)].append(to_subscribe)
 
         if new_subscriptions:
-            await self.update_subscribers()
+            self.update_subscribers()
             subscription_info = self.format_voice_channel_list(new_subscriptions)
-            await ctx.send(f"You have been subscribed to:\n{subscription_info}")
+            await ctx.send(
+                f"You have been subscribed to:\n{subscription_info}\n\nYou can unsubscribe with `!unsubscribe {{channel_id/link}}s`"
+            )
         else:
             await ctx.send("You were not subscribed to any new channels")
 
     @command(description="Lets you unsubscribe from one or more voice channels: `!unsubscribe CHANNEL_ID_HERE`")
-    async def unsubscribe(self, ctx, *, message):
+    async def unsubscribe(self, ctx, *, channel_ids):
         to_unsubscribe = str(ctx.author.id)
-        channels = self.get_channels_from_str(message)
+        channels = self.get_channels_from_str(channel_ids)
         removed = []
 
         for channel in channels:
@@ -162,7 +166,7 @@ class Notifications(Cog):
                 removed.append(channel)
 
         if removed:
-            await self.update_subscribers()
+            self.update_subscribers()
             removed_info = self.format_voice_channel_list(removed)
             await ctx.send(f"You have been unsubscribed from:\n{removed_info}")
         else:
@@ -175,7 +179,9 @@ class Notifications(Cog):
         subbed_channels = self.format_voice_channel_list(self.get_channels_from_str(" ".join(vc_ids)))
 
         if subbed_channels:
-            await ctx.send(f"You are subscribed to:\n{subbed_channels}")
+            await ctx.send(
+                f"You are subscribed to:\n{subbed_channels}\n\nYou can unsubscribe with `!unsubscribe {{channel_id/link}}s`"
+            )
         else:
             await ctx.send("You are not subscribed to any channels")
 

@@ -16,7 +16,7 @@ intents.members = True
 class Bot(_Bot):
     async def on_ready(self):
         print(f"Logged on as {self.user}!")
-        await self.get_cog("Notifications").load_subscribers()
+        self.get_cog("Notifications").load_subscribers()
 
     async def on_message(self, message):
         await check_passive(self, message)
