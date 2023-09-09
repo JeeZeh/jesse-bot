@@ -142,14 +142,14 @@ class Notifications(Cog):
         if new_subscriptions:
             self.update_subscribers()
             subscription_info = self.format_voice_channel_list(new_subscriptions)
-            await ctx.send(
+            await ctx.author.send(
                 f"You have been subscribed to:\n{subscription_info}\n\nYou can unsubscribe with `!unsubscribe {{channel_id/link}}s`"
             )
         else:
-            await ctx.send("You were not subscribed to any new channels")
+            await ctx.author.send("You were not subscribed to any new channels")
 
     @command(description="Lets you unsubscribe from one or more voice channels: `!unsubscribe CHANNEL_ID_HERE`")
-    async def unsubscribe(self, ctx, *, channel_ids):
+    async def unsubscribe(self, ctx: Context, *, channel_ids):
         to_unsubscribe = str(ctx.author.id)
         channels = self.get_channels_from_str(channel_ids)
         removed = []
@@ -168,9 +168,9 @@ class Notifications(Cog):
         if removed:
             self.update_subscribers()
             removed_info = self.format_voice_channel_list(removed)
-            await ctx.send(f"You have been unsubscribed from:\n{removed_info}")
+            await ctx.author.send(f"You have been unsubscribed from:\n{removed_info}")
         else:
-            await ctx.send("You weren't subscribed to any of those channels")
+            await ctx.author.send("You weren't subscribed to any of those channels")
 
     @command(description="Lists voice channels you are subscribed to")
     async def subscribed(self, ctx: Context):
@@ -179,11 +179,11 @@ class Notifications(Cog):
         subbed_channels = self.format_voice_channel_list(self.get_channels_from_str(" ".join(vc_ids)))
 
         if subbed_channels:
-            await ctx.send(
+            await ctx.author.send(
                 f"You are subscribed to:\n{subbed_channels}\n\nYou can unsubscribe with `!unsubscribe {{channel_id/link}}s`"
             )
         else:
-            await ctx.send("You are not subscribed to any channels")
+            await ctx.author.send("You are not subscribed to any channels")
 
     def member_joined_a_channel(self, member: Member, before, after) -> Optional[VoiceChannel]:
         # Check for actual channel movement
