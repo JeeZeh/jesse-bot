@@ -26,8 +26,8 @@ class JesseBotStack(Stack):
         db = ddb.Table(
             self,
             "JesseBotDB",
-            read_capacity=5,
-            write_capacity=5,
+            read_capacity=2,
+            write_capacity=2,
             table_name="jesse-bot-db",
             partition_key=ddb.Attribute(name="id", type=ddb.AttributeType.STRING),
             deletion_protection=True,
@@ -36,8 +36,8 @@ class JesseBotStack(Stack):
         dev_db = ddb.Table(
             self,
             "JesseBotDB-Dev",
-            read_capacity=2,
-            write_capacity=2,
+            read_capacity=1,
+            write_capacity=1,
             table_name="jesse-bot-db-dev",
             partition_key=ddb.Attribute(name="id", type=ddb.AttributeType.STRING),
             deletion_protection=True,
