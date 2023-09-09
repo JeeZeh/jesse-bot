@@ -15,7 +15,7 @@ from discord.ext.commands.bot import Bot
 from discord.ext.commands.context import Context
 from discord.invite import Invite
 
-from lib.api import firebase
+from lib.api import dynamodb
 from lib.logger import logger
 
 
@@ -51,10 +51,12 @@ class Notifications(Cog):
 
     async def load_subscribers(self):
         self.subscribers = defaultdict(list)
-        self.subscribers.update(**firebase.database().child("subscribers").get().val())
+        self.subscribers.update(**dynamodb.get_item(Key={"id": "subscribers"}).get("Item", {}).get("data", {}))
+        if not self.subscribers:
+            print("WARNING: NO SUBSCRIBERS FOUND")
 
-    async def update_subscribers(self):
-        firebase.database().child("subscribers").update(self.subscribers)
+    # async def update_subscribers(self):
+    #     firebase.database().child("subscribers").update(self.subscribers)
 
     def get_within_guild_movement(self, before, after) -> VoiceMovement:
         movement = VoiceMovement(before.channel, after.channel)

@@ -3,7 +3,7 @@ import asyncio
 import discord
 from discord.ext.commands import Bot as _Bot  # type: ignore
 
-from cogs.passive import check_passive
+from lib.passive import check_passive
 from lib.config import COG_EXTENSIONS, TOKEN
 from lib.utils import cleanup
 

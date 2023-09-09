@@ -11,15 +11,15 @@ from discord.errors import HTTPException
 from discord.ext.commands.bot import Bot
 from youtube_dl import YoutubeDL, utils
 
-from lib.api import firebase, spotify, youtube
+from lib.api import spotify, youtube, dynamodb
 from lib.config import SPOTIFY_REDIRECT_URL, VIDEO_GRABBER_DOMAINS
 from lib.logger import logger
 from lib.utils import try_compress_video
 
-text_secrets = {**firebase.database().child("text_secrets").get().val()}
+text_secrets = dynamodb.get_item(Key={"id": "text_secrets"}).get("Item", {})
 
 regex_secrets = {
-    compile(rf"^{k}$", flags=IGNORECASE): v for k, v in firebase.database().child("regex_secrets").get().val().items()
+    compile(rf"^{k}$", flags=IGNORECASE): v for k, v in dynamodb.get_item(Key={"id": "regex_secrets"}).get("Item", {}).items()
 }
 SPOTIFY_URL_IDENTIFIER = "open.spotify.com"
 YOUTUBE_URL_PREFIX = "https://youtu.be"

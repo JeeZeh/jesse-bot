@@ -16,7 +16,7 @@ from discord.member import VoiceState
 from discord.message import Message
 from discord.voice_client import VoiceClient
 
-from lib.api import firebase
+from lib.api import firebase, dynamodb
 
 
 def current_milli_time():
@@ -157,7 +157,10 @@ class Voice(Cog, description="Commands related to voice"):  # type: ignore
 
     def _update_secrets(self) -> Set[str]:
         before: set[str] = set(self.voice_secrets)
-        self.voice_secrets = firebase.database().child("secrets").get().val()
+        self.voice_secrets = dynamodb.get_item(Key={"id": "voice_secrets"}).get("Item", {}).get("data", {})
+        if not self.voice_secrets:
+            print("WARNING: NO VOICE SECRETS FOUND")
+
         self.cached_voice_secrets = {}
 
         return set(self.voice_secrets) - before
@@ -251,7 +254,6 @@ class Voice(Cog, description="Commands related to voice"):  # type: ignore
             stack (bool, optional): Play the requested file on top of an already-playing sound. Defaults to False.
             auto_join (bool, optional): Should the bot join in response to the request. Defaults to True.
         """
-        print(message, requested, self.voice_client)
         audio_wrapper = self._get_audio_wrapper_from_sound_name(requested)
         if audio_wrapper is None:
             return

@@ -65,7 +65,6 @@ def init_boto3_clients():
             region_name=getenv("AWS_REGION"),
         )
 
-    dynamodb = boto.resource("dynamodb").Table("jesse-bot-db")
-
+    dynamodb = boto.resource("dynamodb").Table(getenv("DYNAMO_DB_TABLE"))
 
 init()

@@ -33,7 +33,18 @@ class JesseBotStack(Stack):
             deletion_protection=True,
         )
 
+        dev_db = ddb.Table(
+            self,
+            "JesseBotDB-Dev",
+            read_capacity=2,
+            write_capacity=2,
+            table_name="jesse-bot-db-dev",
+            partition_key=ddb.Attribute(name="id", type=ddb.AttributeType.STRING),
+            deletion_protection=True,
+        )
+
         jesse_bot_user = iam.User(self, "JesseBotUser", user_name="jesse-bot-user")
 
         storage_bucket.grant_read_write(jesse_bot_user)
         db.grant_read_write_data(jesse_bot_user)
+        dev_db.grant_read_write_data(jesse_bot_user)

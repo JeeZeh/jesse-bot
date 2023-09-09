@@ -6,7 +6,7 @@ from typing import Any, Optional
 
 from discord.ext.commands import Bot, Cog, Command, Context, command  # type: ignore
 
-from lib.api import firebase
+from lib.api import dynamodb
 from lib.utils import Constants, char_to_block, partition_message
 
 
@@ -18,7 +18,9 @@ async def batch_send(ctx: Context, to_send: str):
 class Text(Cog, description="Commands which mostly manipulate/send text"):  # type: ignore
     def __init__(self, bot: Bot):
         self.bot = bot
-        self.pastas = list(firebase.database().child("pastas").get().val())
+        self.pastas = list(dynamodb.get_item(Key={"id": "pastas"}).get("Item", {}).get("data", []))
+        if not self.pastas:
+            print("WARNING: NO PASTAS FOUND")
 
     def chainable(command: Any):
         """Used to indicate, and create, a chainable command. A chainable command is one

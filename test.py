@@ -2,7 +2,7 @@ import pytest
 
 import cogs.text as text
 from cogs.notifications import Notifications
-from cogs.passive import try_match_youtube_video_for_spotify_track
+from lib.passive import try_match_youtube_video_for_spotify_track
 from main import bot, load_bot
 
 

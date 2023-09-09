@@ -17,3 +17,5 @@ spotify.json
 .cache
 service_credentials.json
 .env
+to_ddb.json
+as_ddb.json
