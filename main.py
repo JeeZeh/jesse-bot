@@ -5,7 +5,7 @@ from discord.ext.commands import Bot as _Bot  # type: ignore
 
 from lib.passive import check_passive
 from lib.config import COG_EXTENSIONS, TOKEN
-from lib.utils import cleanup
+from lib.utils import cleanup_temp
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -34,7 +34,7 @@ bot = Bot(
 
 
 def load_bot(bot: Bot):
-    cleanup()
+    cleanup_temp()
     for extension in COG_EXTENSIONS:
         asyncio.run(bot.load_extension(f"cogs.{extension}"))
 

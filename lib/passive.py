@@ -9,12 +9,12 @@ import isodate
 from discord import File, Message
 from discord.errors import HTTPException
 from discord.ext.commands.bot import Bot
-from youtube_dl import YoutubeDL, utils
+from yt_dlp import YoutubeDL, utils
 
 from lib.api import spotify, youtube, dynamodb
 from lib.config import SPOTIFY_REDIRECT_URL, VIDEO_GRABBER_DOMAINS
 from lib.logger import logger
-from lib.utils import try_compress_video
+from lib.utils import cleanup_temp, try_compress_video
 
 text_secrets = dynamodb.get_item(Key={"id": "text_secrets"}).get("Item", {})
 
@@ -125,7 +125,8 @@ def spotify_youtube_converter(message: Message) -> Optional[str]:
 async def _send_video_file(bot: Bot, message: Message, path: str):
     try:
         await message.reply(file=File(path), content="📽️ Grabbed the video!")
-        return await message.remove_reaction(member=bot.user, emoji="🔃")
+        await message.remove_reaction(member=bot.user, emoji="🔃")
+        return await message.add_reaction("✅")
     except HTTPException as he:
         await message.remove_reaction("🔃", bot.user)
         await message.add_reaction("❌")
@@ -144,14 +145,12 @@ async def video_grabber(message: Message) -> Optional[str]:
 
         with YoutubeDL({"outtmpl": f"tmp/{id}.%(ext)s", "f": "best[filesize<8M]"}) as ytdl:
             try:
-                ytdl.download([message.content])
                 await message.add_reaction("🔃")
-                filepath = glob(f"../tmp/{id}.*")[0]
+                ytdl.download([message.content])
+                filepath = glob(f"./tmp/{id}.*")[0]
 
                 # Compress videos greater than 7.5MB so they can be set by Discord regular user
-                size = Path(path.abspath(filepath)).stat().st_size / (1024 * 1000)
-                if size > 7.5:
-                    filepath = try_compress_video(filepath)
+                filepath = try_compress_video(filepath)
 
                 return path.abspath(filepath)
             except utils.DownloadError as de:
@@ -208,7 +207,9 @@ async def check_passive(bot: Bot, message: Message):
     if special := await check_specials(message):
         ret_val, special_type = special
         if special_type is SpecialType.VIDEO:
-            return await _send_video_file(bot, message, ret_val)
+            await _send_video_file(bot, message, ret_val)
+            cleanup_temp()
+            return
         else:
             return await (await message.reply(ret_val)).edit(suppress=True)
 

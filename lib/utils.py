@@ -82,13 +82,25 @@ def try_compress_video(filepath) -> str:
         return output_path
 
     try:
-        (ffmpeg.input(filepath).output(output_path, vcodec="libx264", crf="35", preset="veryfast").run())
+        (
+            ffmpeg.input(filepath)
+            .output(
+                output_path,
+                vcodec="libx264",
+                crf="35",
+                preset="slow",
+                acodec="copy",
+                pix_fmt="yuv420p",
+                loglevel="quiet",
+            )
+            .run()
+        )
         return output_path
     except:
         print_exc()
         return filepath
 
 
-def cleanup():
-    for file in glob("../tmp/*.mp4"):
+def cleanup_temp():
+    for file in glob("./tmp/*.mp4"):
         remove(abspath(file))
