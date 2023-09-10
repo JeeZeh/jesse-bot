@@ -2,14 +2,17 @@ from enum import Enum
 from glob import glob
 from os import path
 from pathlib import Path
+from random import choice
 from re import IGNORECASE, compile
 from typing import Any, Callable, Coroutine, List, Optional, Tuple
 
 import isodate
+import validators
 from discord import File, Message
 from discord.errors import HTTPException
 from discord.ext.commands.bot import Bot
 from yt_dlp import YoutubeDL, utils
+from string import ascii_letters
 
 from lib.api import spotify, youtube, dynamodb
 from lib.config import DISABLE_SECRETS_FOR_GUILDS, SPOTIFY_REDIRECT_URL, VIDEO_GRABBER_DOMAINS
@@ -137,16 +140,19 @@ async def _send_video_file(bot: Bot, message: Message, path: str):
 
 
 async def video_grabber(message: Message) -> Optional[str]:
+    link = message.content.strip()
     for domain in VIDEO_GRABBER_DOMAINS:
-        if f"{domain}/" not in message.content:
+        if domain not in link:
+            continue
+        if not validators.url(link):
             continue
 
-        id = message.content.split(domain)[1].replace("/", "_").split("?")[0]
+        id = "jessebot_" + "".join(choice(ascii_letters) for _ in range(8))
 
         with YoutubeDL({"outtmpl": f"tmp/{id}.%(ext)s", "f": "best[filesize<8M]"}) as ytdl:
             try:
                 await message.add_reaction("🔃")
-                ytdl.download([message.content])
+                ytdl.download([link])
                 filepath = glob(f"./tmp/{id}.*")[0]
 
                 # Compress videos greater than 7.5MB so they can be set by Discord regular user

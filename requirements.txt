@@ -16,3 +16,4 @@ isodate
 pytest-asyncio
 python-dotenv
 boto3
+validators
