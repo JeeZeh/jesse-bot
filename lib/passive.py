@@ -37,8 +37,7 @@ class SpecialType(Enum):
     TEXT = 2
 
 
-SpecialTextFunc = Callable[[Message], Optional[str]]
-SpecialVideoFunc = Callable[[Message], Coroutine[Any, Any, Optional[str]]]
+AwaitableSpecialFunc = Callable[[Message], Coroutine[Any, Any, Optional[str]]]
 
 
 def spotify_redirect(message: Message) -> Optional[str]:
@@ -120,7 +119,7 @@ def try_match_youtube_video_for_spotify_track(url: str) -> Optional[str]:
     return None
 
 
-def spotify_youtube_converter(message: Message) -> Optional[str]:
+async def spotify_youtube_converter(message: Message) -> Optional[str]:
     if SPOTIFY_URL_IDENTIFIER in message.content:
         video_id = try_match_youtube_video_for_spotify_track(message.content)
         if video_id:
@@ -170,7 +169,7 @@ async def video_grabber(message: Message) -> Optional[str]:
     return None
 
 
-def ligma(message: Message) -> Optional[str]:
+async def ligma(message: Message) -> Optional[str]:
     if hasattr(message, "guild") and message.guild.id in DISABLE_SECRETS_FOR_GUILDS:
         return None
 
@@ -180,6 +179,13 @@ def ligma(message: Message) -> Optional[str]:
 
     if words[0].lower().replace("'", "") == "whats":
         return f"{' '.join(words[1:])} balls lmao".capitalize()
+
+    return None
+
+
+async def good_bot(message: Message):
+    if message.content.strip().lower().startswith("good bot"):
+        await message.add_reaction("💖")
 
     return None
 
@@ -197,11 +203,11 @@ def check_text_secrets(content: str) -> Optional[str]:
 
 
 async def check_specials(content: Message) -> Optional[Tuple[str, SpecialType]]:
-    text_specials: List[SpecialTextFunc] = [ligma, spotify_youtube_converter]
-    video_specials: List[SpecialVideoFunc] = [video_grabber]
+    text_specials: List[AwaitableSpecialFunc] = [ligma, good_bot, spotify_youtube_converter]
+    video_specials: List[AwaitableSpecialFunc] = [video_grabber]
 
     for text_special in text_specials:
-        check = text_special(content)
+        check = await text_special(content)
         if check is not None:
             return check, SpecialType.TEXT
 
@@ -220,10 +226,9 @@ async def check_passive(bot: Bot, message: Message):
     if special := await check_specials(message):
         ret_val, special_type = special
         if special_type is SpecialType.VIDEO:
-            await _send_video_file(bot, message, ret_val)
-            return
-        else:
-            return await (await message.reply(ret_val)).edit(suppress=True)
+            return await _send_video_file(bot, message, ret_val)
+        elif special_type is SpecialType.TEXT and ret_val:
+            return await message.reply(ret_val, suppress_embeds=True)
 
     if text_secret := check_text_secrets(message.content):
         return await message.channel.send(text_secret)
