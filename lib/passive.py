@@ -1,7 +1,6 @@
 from enum import Enum
 from glob import glob
 from os import path
-from pathlib import Path
 from random import choice
 from re import IGNORECASE, compile
 from string import ascii_letters
@@ -21,7 +20,7 @@ from lib.config import (
     VIDEO_GRABBER_DOMAINS,
 )
 from lib.logger import logger
-from lib.utils import cleanup_temp, try_compress_video
+from lib.utils import try_compress_video
 
 text_secrets = dynamodb.get_item(Key={"id": "text_secrets"}).get("Item", {})
 

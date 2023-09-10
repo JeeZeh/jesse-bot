@@ -39,7 +39,8 @@ class Testing(Cog):
         while messages := await channel.purge(before=datetime(2018, 1, 1), limit=1):
             deleted_count += 1
             print(
-                f"Deleted message {deleted_count} from {messages[0].author.name} on {messages[0].created_at}: '{messages[0].content[:20]}...'"
+                f"Deleted message {deleted_count} from {messages[0].author.name} on"
+                + f"{messages[0].created_at}: '{messages[0].content[:20]}...'"
             )
 
         print("Deleted a total of", deleted_count, "messages")

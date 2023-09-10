@@ -2,15 +2,14 @@ import asyncio
 import re
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import datetime
 from textwrap import dedent
 from time import time
 from typing import Optional
 
-from discord import Member, Message, User
-from discord.channel import TextChannel, VoiceChannel
+from discord import Member
+from discord.channel import VoiceChannel
 from discord.errors import HTTPException
-from discord.ext.commands import Cog, command, group  # type: ignore
+from discord.ext.commands import Cog, command  # type: ignore
 from discord.ext.commands.bot import Bot
 from discord.ext.commands.context import Context
 from discord.invite import Invite
@@ -143,7 +142,8 @@ class Notifications(Cog):
             self.update_subscribers()
             subscription_info = self.format_voice_channel_list(new_subscriptions)
             await ctx.author.send(
-                f"You have been subscribed to:\n{subscription_info}\n\nYou can unsubscribe with `!unsubscribe {{channel_id/link}}s`"
+                f"You have been subscribed to:\n{subscription_info}\n\nYou can unsubscribe with"
+                + " `!unsubscribe {{channel_id/link}}s`"
             )
         else:
             await ctx.author.send("You were not subscribed to any new channels")
@@ -180,7 +180,8 @@ class Notifications(Cog):
 
         if subbed_channels:
             await ctx.author.send(
-                f"You are subscribed to:\n{subbed_channels}\n\nYou can unsubscribe with `!unsubscribe {{channel_id/link}}s`"
+                f"You are subscribed to:\n{subbed_channels}\n\nYou can unsubscribe with"
+                + " `!unsubscribe {{channel_id/link}}s`"
             )
         else:
             await ctx.author.send("You are not subscribed to any channels")

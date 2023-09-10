@@ -1,8 +1,6 @@
-from aws_cdk import RemovalPolicy, Stack
+from aws_cdk import Stack
 from aws_cdk import aws_dynamodb as ddb
 from aws_cdk import aws_iam as iam
-from aws_cdk import aws_s3 as s3
-from common.constants import AWS_ACCOUNT
 from constructs import Construct
 
 
@@ -32,6 +30,5 @@ class JesseBotStack(Stack):
 
         jesse_bot_user = iam.User(self, "JesseBotUser", user_name="jesse-bot-user")
 
-        storage_bucket.grant_read_write(jesse_bot_user)
         db.grant_read_write_data(jesse_bot_user)
         dev_db.grant_read_write_data(jesse_bot_user)
