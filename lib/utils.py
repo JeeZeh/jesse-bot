@@ -1,5 +1,6 @@
 from glob import glob
 from os import remove
+from os import replace
 from posixpath import abspath
 from textwrap import wrap
 from traceback import print_exc
@@ -95,7 +96,8 @@ def try_compress_video(filepath) -> str:
             )
             .run()
         )
-        return output_path
+        replace(output_path, filepath)
+        return filepath
     except:
         print_exc()
         return filepath
