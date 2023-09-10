@@ -76,7 +76,7 @@ def partition_message(text: str):
 
 def try_compress_video(filepath) -> str:
     # ffmpeg -i input.mp4 -vcodec libx264 -crf 20 output.mp4
-    output_path = f"{filepath.split('.mp4')[0]}_e.mp4"
+    output_path = f"{filepath.split('.mp4')[0]}_ffmpeg.mp4"
 
     if glob(output_path):
         return output_path
@@ -88,7 +88,7 @@ def try_compress_video(filepath) -> str:
                 output_path,
                 vcodec="libx264",
                 crf="35",
-                preset="slow",
+                preset="veryfast",
                 acodec="copy",
                 pix_fmt="yuv420p",
                 loglevel="quiet",
