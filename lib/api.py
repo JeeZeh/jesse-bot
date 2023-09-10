@@ -1,12 +1,13 @@
 import json
 from os import getenv
-from dotenv import load_dotenv
 from typing import Any
 
-import pyrebase
 import boto3
+import pyrebase
+from dotenv import load_dotenv
 from googleapiclient.discovery import build
 from spotipy import Spotify, SpotifyClientCredentials
+
 from .logger import logger
 
 load_dotenv()

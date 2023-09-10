@@ -1,4 +1,5 @@
 from datetime import datetime
+
 from discord import Message
 from discord.ext.commands import Cog, command, is_owner  # type: ignore
 from discord.ext.commands.bot import Bot
@@ -40,7 +41,7 @@ class Testing(Cog):
             print(
                 f"Deleted message {deleted_count} from {messages[0].author.name} on {messages[0].created_at}: '{messages[0].content[:20]}...'"
             )
-            
+
         print("Deleted a total of", deleted_count, "messages")
 
 

@@ -1,6 +1,5 @@
 from glob import glob
-from os import remove
-from os import replace
+from os import remove, replace
 from posixpath import abspath
 from textwrap import wrap
 from traceback import print_exc

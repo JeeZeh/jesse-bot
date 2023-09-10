@@ -3,8 +3,8 @@ import asyncio
 import discord
 from discord.ext.commands import Bot as _Bot  # type: ignore
 
-from lib.passive import check_passive
 from lib.config import COG_EXTENSIONS, TOKEN
+from lib.passive import check_passive
 from lib.utils import cleanup_temp
 
 intents = discord.Intents.default()
@@ -21,6 +21,7 @@ class Bot(_Bot):
     async def on_message(self, message):
         await check_passive(self, message)
         return await super().on_message(message)
+
 
 if not TOKEN:
     print("No token found!")

@@ -4,6 +4,7 @@ from os import path
 from pathlib import Path
 from random import choice
 from re import IGNORECASE, compile
+from string import ascii_letters
 from typing import Any, Callable, Coroutine, List, Optional, Tuple
 
 import isodate
@@ -12,17 +13,21 @@ from discord import File, Message
 from discord.errors import HTTPException
 from discord.ext.commands.bot import Bot
 from yt_dlp import YoutubeDL, utils
-from string import ascii_letters
 
-from lib.api import spotify, youtube, dynamodb
-from lib.config import DISABLE_SECRETS_FOR_GUILDS, SPOTIFY_REDIRECT_URL, VIDEO_GRABBER_DOMAINS
+from lib.api import dynamodb, spotify, youtube
+from lib.config import (
+    DISABLE_SECRETS_FOR_GUILDS,
+    SPOTIFY_REDIRECT_URL,
+    VIDEO_GRABBER_DOMAINS,
+)
 from lib.logger import logger
 from lib.utils import cleanup_temp, try_compress_video
 
 text_secrets = dynamodb.get_item(Key={"id": "text_secrets"}).get("Item", {})
 
 regex_secrets = {
-    compile(rf"^{k}$", flags=IGNORECASE): v for k, v in dynamodb.get_item(Key={"id": "regex_secrets"}).get("Item", {}).items()
+    compile(rf"^{k}$", flags=IGNORECASE): v
+    for k, v in dynamodb.get_item(Key={"id": "regex_secrets"}).get("Item", {}).items()
 }
 SPOTIFY_URL_IDENTIFIER = "open.spotify.com"
 YOUTUBE_URL_PREFIX = "https://youtu.be"
@@ -169,7 +174,7 @@ async def video_grabber(message: Message) -> Optional[str]:
 def ligma(message: Message) -> Optional[str]:
     if hasattr(message, "guild") and message.guild.id in DISABLE_SECRETS_FOR_GUILDS:
         return None
-    
+
     words = message.content.split()
     if not 1 < len(words) < 8:
         return None

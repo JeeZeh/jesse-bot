@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-from common.constants import AWS_ACCOUNT
-
 import aws_cdk as cdk
+from common.constants import AWS_ACCOUNT
 
 from aws.bot_stack import JesseBotStack
 

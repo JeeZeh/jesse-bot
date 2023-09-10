@@ -1,12 +1,9 @@
-from aws_cdk import (
-    RemovalPolicy,
-    Stack,
-    aws_s3 as s3,
-    aws_iam as iam,
-    aws_dynamodb as ddb,
-)
-from constructs import Construct
+from aws_cdk import RemovalPolicy, Stack
+from aws_cdk import aws_dynamodb as ddb
+from aws_cdk import aws_iam as iam
+from aws_cdk import aws_s3 as s3
 from common.constants import AWS_ACCOUNT
+from constructs import Construct
 
 
 class JesseBotStack(Stack):
