@@ -211,7 +211,6 @@ async def check_passive(bot: Bot, message: Message):
         ret_val, special_type = special
         if special_type is SpecialType.VIDEO:
             await _send_video_file(bot, message, ret_val)
-            cleanup_temp()
             return
         else:
             return await (await message.reply(ret_val)).edit(suppress=True)
