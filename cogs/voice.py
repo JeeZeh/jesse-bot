@@ -17,6 +17,7 @@ from discord.message import Message
 from discord.voice_client import VoiceClient
 
 from lib.api import firebase, dynamodb
+from lib.config import DISABLE_SECRETS_FOR_GUILDS
 
 
 def current_milli_time():
@@ -288,8 +289,11 @@ class Voice(Cog, description="Commands related to voice"):  # type: ignore
         if op.startswith("rev") and self.client_source is not None:
             self.client_source.reverse()
 
-    async def check_for_voice_secret_triggers(self, message):
+    async def check_for_voice_secret_triggers(self, message: Message):
         if len(message.content) == 0:
+            return
+        
+        if hasattr(message, "guild") and message.guild.id in DISABLE_SECRETS_FOR_GUILDS:
             return
 
         if message.content[0] == "&":

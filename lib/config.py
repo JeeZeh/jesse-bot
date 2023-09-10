@@ -10,9 +10,10 @@ def get_config():
 config = get_config()
 
 
-TOKEN = config["discord_token"]
-SPOTIFY_REDIRECT_URL = config["spotify_redirect_url"]
-MAX_MESSAGE_LENGTH = config["max_message_length"]
-SLASH_GUILDS = config["slash_guilds"]
-VIDEO_GRABBER_DOMAINS = config["video_grabber_domains"]
-COG_EXTENSIONS = config["cog_extensions"]
+TOKEN: str = config["discord_token"]
+SPOTIFY_REDIRECT_URL: str = config["spotify_redirect_url"]
+MAX_MESSAGE_LENGTH: int = config["max_message_length"]
+SLASH_GUILDS: list[int] = config["slash_guilds"]
+DISABLE_SECRETS_FOR_GUILDS: list[int] = config["disable_secrets_for_guilds"]
+VIDEO_GRABBER_DOMAINS: list[str] = config["video_grabber_domains"]
+COG_EXTENSIONS: list[str] = config["cog_extensions"]

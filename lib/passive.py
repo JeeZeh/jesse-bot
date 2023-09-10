@@ -12,7 +12,7 @@ from discord.ext.commands.bot import Bot
 from yt_dlp import YoutubeDL, utils
 
 from lib.api import spotify, youtube, dynamodb
-from lib.config import SPOTIFY_REDIRECT_URL, VIDEO_GRABBER_DOMAINS
+from lib.config import DISABLE_SECRETS_FOR_GUILDS, SPOTIFY_REDIRECT_URL, VIDEO_GRABBER_DOMAINS
 from lib.logger import logger
 from lib.utils import cleanup_temp, try_compress_video
 
@@ -161,6 +161,9 @@ async def video_grabber(message: Message) -> Optional[str]:
 
 
 def ligma(message: Message) -> Optional[str]:
+    if hasattr(message, "guild") and message.guild.id in DISABLE_SECRETS_FOR_GUILDS:
+        return None
+    
     words = message.content.split()
     if not 1 < len(words) < 8:
         return None
