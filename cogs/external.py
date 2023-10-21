@@ -4,6 +4,8 @@ from string import ascii_lowercase, digits
 from discord.ext import commands
 from discord.ext.commands.context import Context
 
+from lib.utils import secrets_disabled
+
 
 class External(commands.Cog, description="Commands that talk to the outside world"):  # type: ignore
     def __init__(self, bot: commands.Bot):
@@ -11,6 +13,9 @@ class External(commands.Cog, description="Commands that talk to the outside worl
 
     @commands.command(description="Gives a random image from prnt.sc")
     async def prntsc(self, ctx: Context):
+        if secrets_disabled(ctx.message):
+            return await ctx.reply("`prntsc` is disabled for this guild/chat as results are potentially NSFW")
+
         prefix = choice("3456789abcdefghij")
         suffix = "".join(choice(digits + ascii_lowercase) for _ in range(5))
 

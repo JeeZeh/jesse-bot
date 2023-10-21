@@ -7,7 +7,7 @@ from typing import Any, Optional
 from discord.ext.commands import Bot, Cog, Command, Context, command  # type: ignore
 
 from lib.api import dynamodb
-from lib.utils import Constants, char_to_block, partition_message
+from lib.utils import Constants, char_to_block, partition_message, secrets_disabled
 
 
 async def batch_send(ctx: Context, to_send: str):
@@ -153,7 +153,10 @@ class Text(Cog, description="Commands which mostly manipulate/send text"):  # ty
 
     @command(description="Gives a random copy-pasta from local database")
     @chainable
-    async def pasta(self, ctx):
+    async def pasta(self, ctx: Context):
+        if secrets_disabled(ctx.message):
+            return await ctx.reply("Pastas are disabled for this guild/chat")
+
         pasta = self.pastas[randint(0, len(self.pastas) - 1)]
 
         return pasta

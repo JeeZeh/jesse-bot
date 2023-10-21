@@ -103,6 +103,7 @@ def try_compress_video(filepath) -> str:
         return filepath
 
 
+# TODO: Make per-server configurable commands 
 def secrets_disabled(message: Message):
     if hasattr(message, "guild") and message.guild is not None:
         return message.guild.id in DISABLE_SECRETS_FOR_GUILDS

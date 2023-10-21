@@ -366,8 +366,9 @@ class Voice(Cog, description="Commands related to voice"):  # type: ignore
 
     @command(description="Lists the secret voice commands")
     async def secrets(self, ctx: Context):
-        if secrets_disabled(message):
-            return await ctx.reply()
+        if secrets_disabled(ctx.message):
+            return await ctx.reply("Secrets are disabled outside of guilds")
+
         commands = sorted([f"`{s}`" for s in self.voice_secrets])
         await ctx.send("\n".join(commands))
 
