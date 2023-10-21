@@ -31,20 +31,6 @@ class Testing(Cog):
 
         await ctx.reply(f"Reloaded {len(COG_EXTENSIONS)} extension(s)")
 
-    @command()
-    async def clean_nsfw(self, ctx: Context, routine: str = None):
-        channel_id = 173079124158447617
-        channel = self.bot.get_channel(channel_id)
-        deleted_count = 0
-        while messages := await channel.purge(before=datetime(2018, 1, 1), limit=1):
-            deleted_count += 1
-            print(
-                f"Deleted message {deleted_count} from {messages[0].author.name} on"
-                + f"{messages[0].created_at}: '{messages[0].content[:20]}...'"
-            )
-
-        print("Deleted a total of", deleted_count, "messages")
-
 
 async def setup(bot: Bot):
     await bot.add_cog(Testing(bot))
