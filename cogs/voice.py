@@ -5,7 +5,6 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Optional, Set
-from lib.utils import secrets_disabled
 
 import numpy as np
 from discord import AudioSource, FFmpegPCMAudio, Member, PCMVolumeTransformer
@@ -18,6 +17,7 @@ from discord.message import Message
 from discord.voice_client import VoiceClient
 
 from lib.api import dynamodb, firebase
+from lib.utils import secrets_disabled
 
 
 def current_milli_time():
@@ -201,7 +201,7 @@ class Voice(Cog, description="Commands related to voice"):  # type: ignore
         self.voice_client.stop()
         self.voice_client.play(PCMVolumeTransformer(source, 0.5))
 
-    def _download_missing_sound_file(self, path: str) -> str:
+    def _download_missing_sound_file(self, path: str) -> Path:
         """Downloads a missing sound file from firebase and returns the local
         storage location.
 
@@ -335,7 +335,10 @@ class Voice(Cog, description="Commands related to voice"):  # type: ignore
 
     @command(aliases=["j"], description="Joins a voice channel if the user is in one")
     async def join(self, ctx: Context):
-        member: Member = ctx.author
+        member = ctx.author
+        if not hasattr(member, "voice"):
+            return
+
         voice_state: Optional[VoiceState] = member.voice
 
         if voice_state is None:
@@ -355,7 +358,12 @@ class Voice(Cog, description="Commands related to voice"):  # type: ignore
         description="Leaves a voice channel if the user is in the same server",
     )
     async def leave(self, ctx: Context):
-        member: Member = ctx.author
+        member = ctx.author
+
+        if not hasattr(member, "guild") or not (
+            hasattr(self.voice_client, "disconnect") or hasattr(self.voice_client, "guild")
+        ):
+            return
 
         if self.voice_client is None or self.voice_client.guild != member.guild:
             await ctx.send(Helpers.BAD_LEAVE)

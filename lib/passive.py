@@ -14,12 +14,9 @@ from discord.ext.commands.bot import Bot
 from yt_dlp import YoutubeDL, utils
 
 from lib.api import dynamodb, spotify, youtube
-from lib.config import (
-    SPOTIFY_REDIRECT_URL,
-    VIDEO_GRABBER_DOMAINS,
-)
+from lib.config import SPOTIFY_REDIRECT_URL, VIDEO_GRABBER_DOMAINS
 from lib.logger import logger
-from lib.utils import try_compress_video, secrets_disabled
+from lib.utils import secrets_disabled, try_compress_video
 
 text_secrets = dynamodb.get_item(Key={"id": "text_secrets"}).get("Item", {})
 
@@ -167,7 +164,7 @@ async def video_grabber(message: Message) -> Optional[str]:
 
 async def ligma(message: Message) -> Optional[str]:
     if secrets_disabled(message):
-        return
+        return None
 
     words = message.content.split()
     if not 1 < len(words) < 8:
@@ -216,7 +213,7 @@ async def check_specials(content: Message) -> Optional[Tuple[str, SpecialType]]:
 
 
 async def check_passive(bot: Bot, message: Message):
-    if bot.user.id == message.author.id:
+    if bot.user and bot.user.id == message.author.id:
         return
 
     special = None
@@ -230,7 +227,8 @@ async def check_passive(bot: Bot, message: Message):
     except:
         await message.add_reaction("❌")
     finally:
-        await message.remove_reaction("🔃", bot.user)
+        if bot.user:
+            await message.remove_reaction("🔃", bot.user)
         # We already processed this message
         if special:
             return

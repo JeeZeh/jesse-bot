@@ -3,9 +3,9 @@ from os import remove, replace
 from posixpath import abspath
 from textwrap import wrap
 from traceback import print_exc
-from discord import Message
 
 import ffmpeg
+from discord import Message
 
 from lib.config import DISABLE_SECRETS_FOR_GUILDS, MAX_MESSAGE_LENGTH
 
@@ -103,7 +103,7 @@ def try_compress_video(filepath) -> str:
         return filepath
 
 
-# TODO: Make per-server configurable commands 
+# TODO: Make per-server configurable commands
 def secrets_disabled(message: Message):
     if hasattr(message, "guild") and message.guild is not None:
         return message.guild.id in DISABLE_SECRETS_FOR_GUILDS

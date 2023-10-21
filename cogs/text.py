@@ -56,7 +56,9 @@ class Text(Cog, description="Commands which mostly manipulate/send text"):  # ty
             # we need to strip out the chains from the initial message and call the text generator by itself.
             # If we do not do this, we will try to call the generator with a message (the remaining chains),
             # and the bot will not invoke the command as the arguments do not match.
-            message: str = kwargs.get("message", ctx.message.content[len(ctx.prefix) + len(ctx.invoked_with) :])
+            message: str = kwargs.get(
+                "message", ctx.message.content[len(ctx.prefix or "") + len(ctx.invoked_with or "") :]
+            )
 
             # No chains (left), run the underlying command and return the result if the function didn't already reply
             if not message or " -> " not in message:

@@ -72,10 +72,13 @@ class Notifications(Cog):
         return False
 
     async def maybe_notify_subscribers(self, joiner: Member, channel: VoiceChannel):
+        if not hasattr(channel, "members"):
+            return
+
         if not await self.channel_still_populated(channel):
             return
 
-        members_in_channel = set(map(lambda x: str(x.id), self.bot.get_channel(channel.id).members))
+        members_in_channel = set(map(lambda x: str(x.id), channel.members))
 
         for subscriber in self.subscribers.get(str(channel.id), []):
             # Don't notify the person who joined the channel

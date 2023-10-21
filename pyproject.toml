@@ -1,8 +1,11 @@
 [tool.isort]
 profile = "black"
+skip = "aws"
 
 [tool.black]
 line_length = 120
+exclude = "aws"
 
 [tool.mypy]
 ignore_missing_imports = true
+exclude = "testing.py"

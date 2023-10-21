@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from discord import Message
 from discord.ext.commands import Cog, command, is_owner  # type: ignore
 from discord.ext.commands.bot import Bot
