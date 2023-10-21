@@ -3,10 +3,11 @@ from os import remove, replace
 from posixpath import abspath
 from textwrap import wrap
 from traceback import print_exc
+from discord import Message
 
 import ffmpeg
 
-from lib.config import MAX_MESSAGE_LENGTH
+from lib.config import DISABLE_SECRETS_FOR_GUILDS, MAX_MESSAGE_LENGTH
 
 
 class Constants:
@@ -100,6 +101,14 @@ def try_compress_video(filepath) -> str:
     except:
         print_exc()
         return filepath
+
+
+def secrets_disabled(message: Message):
+    if hasattr(message, "guild") and message.guild is not None:
+        return message.guild.id in DISABLE_SECRETS_FOR_GUILDS
+
+    # Secrets are disabled in DMs by default
+    return True
 
 
 def cleanup_temp():

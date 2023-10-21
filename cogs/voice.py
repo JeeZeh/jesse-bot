@@ -5,6 +5,7 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Optional, Set
+from lib.utils import secrets_disabled
 
 import numpy as np
 from discord import AudioSource, FFmpegPCMAudio, Member, PCMVolumeTransformer
@@ -17,7 +18,6 @@ from discord.message import Message
 from discord.voice_client import VoiceClient
 
 from lib.api import dynamodb, firebase
-from lib.config import DISABLE_SECRETS_FOR_GUILDS
 
 
 def current_milli_time():
@@ -293,7 +293,7 @@ class Voice(Cog, description="Commands related to voice"):  # type: ignore
         if len(message.content) == 0:
             return
 
-        if hasattr(message, "guild") and message.guild.id in DISABLE_SECRETS_FOR_GUILDS:
+        if secrets_disabled(message):
             return
 
         if message.content[0] == "&":
@@ -366,6 +366,8 @@ class Voice(Cog, description="Commands related to voice"):  # type: ignore
 
     @command(description="Lists the secret voice commands")
     async def secrets(self, ctx: Context):
+        if secrets_disabled(message):
+            return await ctx.reply()
         commands = sorted([f"`{s}`" for s in self.voice_secrets])
         await ctx.send("\n".join(commands))
 

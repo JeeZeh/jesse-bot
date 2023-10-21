@@ -15,12 +15,11 @@ from yt_dlp import YoutubeDL, utils
 
 from lib.api import dynamodb, spotify, youtube
 from lib.config import (
-    DISABLE_SECRETS_FOR_GUILDS,
     SPOTIFY_REDIRECT_URL,
     VIDEO_GRABBER_DOMAINS,
 )
 from lib.logger import logger
-from lib.utils import try_compress_video
+from lib.utils import try_compress_video, secrets_disabled
 
 text_secrets = dynamodb.get_item(Key={"id": "text_secrets"}).get("Item", {})
 
@@ -167,8 +166,8 @@ async def video_grabber(message: Message) -> Optional[str]:
 
 
 async def ligma(message: Message) -> Optional[str]:
-    if hasattr(message, "guild") and message.guild.id in DISABLE_SECRETS_FOR_GUILDS:
-        return None
+    if secrets_disabled(message):
+        return
 
     words = message.content.split()
     if not 1 < len(words) < 8:
