@@ -131,11 +131,8 @@ async def spotify_youtube_converter(message: Message) -> Optional[str]:
 async def _send_video_file(bot: Bot, message: Message, path: str):
     try:
         await message.reply(file=File(path), content="📽️ Grabbed the video!")
-        await message.remove_reaction(member=bot.user, emoji="🔃")
         return await message.add_reaction("✅")
     except HTTPException as he:
-        await message.remove_reaction("🔃", bot.user)
-        await message.add_reaction("❌")
         if he.status == 413:
             await message.reply("Video was too large to send :(")
         else:
@@ -223,12 +220,21 @@ async def check_passive(bot: Bot, message: Message):
     if bot.user.id == message.author.id:
         return
 
-    if special := await check_specials(message):
-        ret_val, special_type = special
-        if special_type is SpecialType.VIDEO:
-            return await _send_video_file(bot, message, ret_val)
-        elif special_type is SpecialType.TEXT and ret_val:
-            return await message.reply(ret_val, suppress_embeds=True)
+    special = None
+    try:
+        if special := await check_specials(message):
+            ret_val, special_type = special
+            if special_type is SpecialType.VIDEO:
+                await _send_video_file(bot, message, ret_val)
+            elif special_type is SpecialType.TEXT and ret_val:
+                await message.reply(ret_val, suppress_embeds=True)
+    except:
+        await message.add_reaction("❌")
+    finally:
+        await message.remove_reaction("🔃", bot.user)
+        # We already processed this message
+        if special:
+            return
 
     if text_secret := check_text_secrets(message.content):
         return await message.channel.send(text_secret)
