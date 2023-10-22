@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from enum import Enum
 from random import choice
 from string import ascii_lowercase, digits
 from typing import Optional
@@ -7,9 +6,9 @@ from typing import Optional
 from discord.ext import commands
 from discord.ext.commands.context import Context
 from requests import post
-from lib.logger import logger
-from lib.config import SONG_TRANSLATE_DOMAINS
 
+from lib.config import SONG_TRANSLATE_DOMAINS
+from lib.logger import logger
 from lib.utils import secrets_disabled
 
 SONGWHIP_URL = "https://songwhip.com/"
@@ -44,9 +43,16 @@ class External(commands.Cog, description="Commands that talk to the outside worl
 
         await ctx.send(f"https://prnt.sc/{prefix}{suffix}")
 
-    @commands.command(description="Provides cross-platform song link using Songwhip for the provided URL.")
-    async def song(self, ctx: Context, arg: str):
-        url = arg.strip()
+    @commands.command(
+        description="Provides cross-platform song link using Songwhip for the provided URL. "
+        + f"Supported domains: {', '.join(SONG_TRANSLATE_DOMAINS)}"
+    )
+    async def song(
+        self,
+        ctx: Context,
+        song: str = commands.parameter(description="A song link from one of the supported domains."),
+    ):
+        url = song.strip()
         if not any(domain in url for domain in SONG_TRANSLATE_DOMAINS):
             return await ctx.reply(f"Unsupported link. Supported links: {', '.join(SONG_TRANSLATE_DOMAINS)}")
 

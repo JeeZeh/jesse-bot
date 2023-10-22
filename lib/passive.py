@@ -216,7 +216,7 @@ async def check_passive(bot: Bot, message: Message):
     # Don't check commands
     if message.content.startswith(COMMAND_PREFIX):
         return None
-    
+
     if bot.user and bot.user.id == message.author.id:
         return
 
