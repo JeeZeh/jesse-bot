@@ -9,7 +9,7 @@ def get_config():
 
 config = get_config()
 
-
+COMMAND_PREFIX = "!"
 TOKEN: str = config["discord_token"]
 SPOTIFY_REDIRECT_URL: str = config["spotify_redirect_url"]
 MAX_MESSAGE_LENGTH: int = config["max_message_length"]

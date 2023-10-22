@@ -3,7 +3,7 @@ import asyncio
 import discord
 from discord.ext.commands import Bot as _Bot  # type: ignore
 
-from lib.config import COG_EXTENSIONS, TOKEN
+from lib.config import COG_EXTENSIONS, COMMAND_PREFIX, TOKEN
 from lib.passive import check_passive
 from lib.utils import cleanup_temp
 
@@ -28,7 +28,7 @@ if not TOKEN:
     exit()
 
 bot = Bot(
-    command_prefix="!",
+    command_prefix=COMMAND_PREFIX,
     description="Jesse's custom bot, rewritten in Python!",
     intents=intents,
 )
