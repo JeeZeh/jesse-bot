@@ -62,7 +62,7 @@ class External(commands.Cog, description="Commands that talk to the outside worl
             )
         else:
             await ctx.message.add_reaction("✅")
-            await ctx.reply(f"Converted: {response.link}")
+            await ctx.reply(f"Converted: {response.link}", suppress_embeds=True)
 
         return await ctx.message.remove_reaction("🔃", self.bot.user)
 
