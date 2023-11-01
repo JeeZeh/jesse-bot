@@ -75,8 +75,6 @@ class External(commands.Cog, description="Commands that talk to the outside worl
             except:
                 logger.error(f"Could not create thread from message id='{ctx.message.id}'", exc_info=True)
                 await ctx.reply(f"Converted: {response.link}", suppress_embeds=True)
-            finally:
-                await ctx.message.add_reaction("✅")
 
         return await ctx.message.remove_reaction("🔃", self.bot.user)
 
