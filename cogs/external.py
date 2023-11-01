@@ -18,6 +18,7 @@ SONGWHIP_URL = "https://songwhip.com/"
 class SongwhipResponse:
     status: int
     link: Optional[str]
+    name: str
 
 
 class External(commands.Cog, description="Commands that talk to the outside world"):  # type: ignore
@@ -28,7 +29,8 @@ class External(commands.Cog, description="Commands that talk to the outside worl
         # curl --request POST --data '{"url":"MY_SOURCE_MUSIC_LINK"}'
         req = post(SONGWHIP_URL, json={"url": url})
         try:
-            return SongwhipResponse(req.status_code, link=req.json().get("url"))
+            res_json = req.json()
+            return SongwhipResponse(req.status_code, link=res_json.get("url"), name=res_json.get("name"))
         except:
             logger.error("Failed to get link from Songwhip", exc_info=True)
             return SongwhipResponse(req.status_code)
@@ -67,8 +69,14 @@ class External(commands.Cog, description="Commands that talk to the outside worl
                 f"An unknown error occurred when converting your link with `!song`: {url}", suppress_embeds=True
             )
         else:
-            await ctx.message.add_reaction("✅")
-            await ctx.reply(f"Converted: {response.link}", suppress_embeds=True)
+            try:
+                thread = await ctx.message.create_thread(name=response.name)
+                await thread.send(response.link)
+            except:
+                logger.error(f"Could not create thread from message id='{ctx.message.id}'", exc_info=True)
+                await ctx.reply(f"Converted: {response.link}", suppress_embeds=True)
+            finally:
+                await ctx.message.add_reaction("✅")
 
         return await ctx.message.remove_reaction("🔃", self.bot.user)
 
